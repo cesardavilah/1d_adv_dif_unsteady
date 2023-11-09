@@ -44,9 +44,10 @@ if __name__ == '__main__':
     }
 
     EX_RATIO = 1 #CONSTANT SPACING
-    N = 40
-    DELTA_T = .01
-    STEPS = 10000
+    N = 100
+    DELTA_T = .001
+    N_STEPS = 100
+    checkpoint = 1  # INTERVAL TO SAVE HISTORY
 
 
 
@@ -64,16 +65,21 @@ if __name__ == '__main__':
     analytical_solution = cds.exact_solution(domain=domain, CONST_DICT=CONST_DICT)
 
     #use RK2
-    checkpoint = 1
-    rk_2_solution, history = rk.runge_kutta(initial_guess=initial_guess, order=2, analytical_solution=analytical_solution, CONST_DICT=CONST_DICT, DELTA_T=DELTA_T, domain=domain, MAX_STEPS=STEPS, checkpoint=checkpoint, verbose=True)
+
+
+    rk_2_solution, history = rk.runge_kutta(initial_guess=initial_guess, order=2, analytical_solution=analytical_solution, CONST_DICT=CONST_DICT, DELTA_T=DELTA_T, domain=domain, MAX_STEPS=N_STEPS, checkpoint=checkpoint, verbose=False)
 
     # plt.plot(domain, rk_2_solution)
     # plt.show()
     plt.figure()
+
     for h in history:
         plt.plot(domain, h)
         # print(h)
 
+    plt.plot(domain, analytical_solution, label="Analytical solution", color='Green', marker='^')
+
+    plt.legend()
     plt.show()
 
 

@@ -1,5 +1,5 @@
 import numpy as np
-
+import matplotlib.pyplot as plt
 
 def cds_magic(phi, phi_plus_one, phi_minus_one, domain, CONST_DICT: dict):
     U = CONST_DICT['U']
@@ -14,65 +14,55 @@ def cds_magic(phi, phi_plus_one, phi_minus_one, domain, CONST_DICT: dict):
     dphi_dt = -U * ((phi_plus_one - phi_minus_one) /(2*DELTA_X)) + (GAMMA/RHO) * ((phi_plus_one + phi_minus_one - 2 * phi)/(DELTA_X**2))
     return dphi_dt
 
-def rk2(initial_guess: np.array, CONST_DICT, analytical_solution, domain, MAX_STEPS, DELTA_T, checkpoint, verbose=False):
+def dphi_dt(solution, domain, CONST_DICT, verbose):
+    '''
+    Returns dphi/dt for all points in domain
+    :param domain:
+    :param verbose:
+    :return:
+    '''
+    dphi_dt_domain = np.zeros(len(solution))
+    for i in range(1, len(solution) - 1):
+        dphi_dt_domain[i] = cds_magic(
+                phi=solution[i],
+                phi_plus_one=solution[i+1],
+                phi_minus_one=solution[i-1],
+                domain=domain,
+                CONST_DICT=CONST_DICT
+            )
 
-    eps = 0.001
-    solution = np.zeros(len(domain), dtype=np.double)
 
+    return dphi_dt_domain
+
+
+
+def rk2_revision(initial_guess: np.array, CONST_DICT, analytical_solution, domain, MAX_STEPS, DELTA_T, checkpoint, verbose=False):
+
+
+    solution = initial_guess.copy()
     history = []
 
+
+    if verbose:
+        plt.figure()
+        print('DEBUGGING INSIDE @rk2_revision')
+
     for t in range(0, int(MAX_STEPS)):
-        if t == 0:
-            solution = initial_guess.copy()
         if t == 1:
-            solution[0] = CONST_DICT['PHI_LEFT']
             solution[-1] = CONST_DICT['PHI_RIGHT']
-        if np.sum(np.abs(analytical_solution - solution)) <= eps:
-            break
+        # PREDICTOR
+        Q_STAR = solution + (DELTA_T/2)*dphi_dt(solution=solution, domain=domain, CONST_DICT=CONST_DICT, verbose=verbose)
+        # CORRECTOR
+        solution = solution + DELTA_T * dphi_dt(solution=Q_STAR, domain=domain, CONST_DICT=CONST_DICT, verbose=verbose)
 
-        #UPDATE
-        prev_solution = solution.copy()
-        Q_STAR = prev_solution.copy()
-        for i in range(1, len(domain)-1):
-            #CORRECTOR
-            Q_STAR[i] = prev_solution[i] + ((DELTA_T/2) * cds_magic(
-                phi=prev_solution[i],
-                phi_plus_one=prev_solution[i+1],
-                phi_minus_one=prev_solution[i-1],
-                domain=domain,
-                CONST_DICT=CONST_DICT
-            ))
-
-        for i in range(1, len(domain)-1):
-            #PREDICTOR
-            solution[i] = prev_solution[i] + (DELTA_T * cds_magic(
-                phi=Q_STAR[i],
-                phi_plus_one=Q_STAR[i + 1],
-                phi_minus_one=Q_STAR[i - 1],
-                domain=domain,
-                CONST_DICT=CONST_DICT
-            ))
-        # if np.sum(np.abs(solution - prev_solution)) <= eps:
-        #     history.append(solution)
-        #     break
-        # if verbose:
-        #     print(solution)
         if t % checkpoint == 0:
             print(t, "Saving to history")
-            # print(f"This is QSTAR{Q_STAR}")
             history.append(solution)
 
+        if verbose: print(solution)
+        if verbose: plt.plot(domain, solution)
 
-
-
-
-
-
-
-
-
-
-
+    if verbose: plt.show()
 
 
     return solution, history
@@ -83,7 +73,8 @@ def runge_kutta(initial_guess: np.array, order:int, analytical_solution, CONST_D
 
     if order == 2:
         print("USING RK2")
-        solution, history = rk2(initial_guess=initial_guess.copy(), CONST_DICT=CONST_DICT, analytical_solution=analytical_solution, domain=domain, MAX_STEPS=MAX_STEPS, DELTA_T=DELTA_T, checkpoint=checkpoint, verbose=verbose)
+        # solution, history = rk2(initial_guess=initial_guess.copy(), CONST_DICT=CONST_DICT, analytical_solution=analytical_solution, domain=domain, MAX_STEPS=MAX_STEPS, DELTA_T=DELTA_T, checkpoint=checkpoint, verbose=verbose)
+        solution, history = rk2_revision(initial_guess=initial_guess.copy(), CONST_DICT=CONST_DICT, analytical_solution=analytical_solution, domain=domain, MAX_STEPS=MAX_STEPS, DELTA_T=DELTA_T, checkpoint=checkpoint, verbose=verbose)
 
     else:
         raise NotImplementedError("ONLY RK2 is implemented, set order = 2")
