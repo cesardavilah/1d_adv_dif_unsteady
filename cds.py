@@ -4,7 +4,8 @@ from scipy import interpolate
 
 import math
 
-
+def power(my_list, pow):
+    return [x**pow for x in my_list]
 
 def exact_solution(domain, CONST_DICT: dict):
     phi_left = CONST_DICT['PHI_LEFT']

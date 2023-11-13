@@ -8,8 +8,6 @@ def cds_magic(phi, phi_plus_one, phi_minus_one, domain, CONST_DICT: dict):
 
     DELTA_X = domain[1]
 
-    # dphi_dt = ((-1 * (U)) * ( (phi_plus_one - phi_minus_one)) / (2 * DELTA_X) ) + ( ( GAMMA/RHO ) * ( (phi_plus_one + phi_minus_one - 2 * phi) / (DELTA_X**2) ) )
-    #
 
     dphi_dt = -U * ((phi_plus_one - phi_minus_one) /(2*DELTA_X)) + (GAMMA/RHO) * ((phi_plus_one + phi_minus_one - 2 * phi)/(DELTA_X**2))
     return dphi_dt
@@ -78,8 +76,7 @@ def runge_kutta(initial_guess: np.array, order:int, analytical_solution, CONST_D
 
     else:
         raise NotImplementedError("ONLY RK2 is implemented, set order = 2")
-
-
-
-
     return solution, history
+
+def delta_t_marginal(delta_x, CONST_DICT: dict, verbose=False):
+    return (1/2) * (CONST_DICT["RHO"]/CONST_DICT["GAMMA"]) * (delta_x**2)
